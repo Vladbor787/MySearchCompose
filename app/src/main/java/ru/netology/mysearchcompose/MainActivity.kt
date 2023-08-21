@@ -16,9 +16,9 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -33,12 +33,14 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -53,7 +55,7 @@ class MainActivity : ComponentActivity() {
             MySearchComposeTheme {
                 val viewModel = viewModel<MainViewModel>()
                 val searchText by viewModel.searchText.collectAsState()
-                val persons by viewModel.persons.collectAsState()
+                val aircrafts by viewModel.aircrafts.collectAsState()
                 val isSearching by viewModel.isSearching.collectAsState()
                 Column(
 
@@ -89,58 +91,8 @@ class MainActivity : ComponentActivity() {
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(persons) { person ->
-                               Card(
-                                   elevation = 4.dp,
-                                   modifier = Modifier.padding(8.dp)
-                               ) {
-                                   Column (
-                                       modifier = Modifier
-                                           .animateContentSize(
-                                               animationSpec = spring(
-                                                   dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                   stiffness = Spring.StiffnessLow
-                                               )
-                                           )
-                                   ){
-                                       Row {
-                                           Text(person.RusRegistr,
-                                               color = Color.Blue,
-                                               fontFamily = FontFamily.Serif,
-                                               fontWeight = FontWeight.Bold,
-                                               fontSize = 18.sp,
-                                               modifier = Modifier
-                                                   .weight(2f)
-                                                   .background(
-                                                       shape = RoundedCornerShape(4.dp),
-                                                       color = Color.LightGray
-                                                   )
-                                           )
-                                           Text(person.lastName,
-                                               fontFamily = FontFamily.SansSerif,
-                                               fontSize = 20.sp,
-                                               fontWeight = FontWeight.Bold,
-                                               fontStyle = FontStyle.Italic,
-                                               modifier = Modifier
-                                                   .graphicsLayer {
-                                                       clip = true
-                                                       shape = RoundedCornerShape(24.dp)
-                                                   }
-                                                   .background(
-                                                       shape = RoundedCornerShape(4.dp),
-                                                       color = Color.Yellow
-                                                   )
-                                                   .padding(horizontal = 8.dp)
-                                                   .weight(4f))
-                                           Spacer(Modifier.weight(1f))
-
-
-
-                                       }
-                                   }
-
-                               }
-
+                            items(aircrafts) {
+                                AircraftItem(aircraft = it)
                             }
                         }
                     }
@@ -156,9 +108,111 @@ private fun AircraftItemButton(
 ) {
     IconButton(onClick = onClick) {
         Icon(
-            imageVector = if (expanded) Icons.Filled.KeyboardArrowDown else Icons.Filled.KeyboardArrowUp,
+            imageVector = if (expanded) Icons.Filled.KeyboardArrowUp else Icons.Filled.KeyboardArrowDown,
             tint = MaterialTheme.colors.secondary,
             contentDescription = null,
         )
+    }
+}
+@Composable
+fun AircraftInfoItem(acRusReg: String, acType: String,acForReg:String,modifier: Modifier = Modifier) {
+    Column {
+        Row {
+            Text(
+                text = acRusReg,
+                style = MaterialTheme.typography.h5,
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Bold,
+                modifier = modifier.padding(top = 4.dp)
+            )
+            Spacer(Modifier.widthIn(16.dp))
+            Text(
+                text = acForReg,
+                style = MaterialTheme.typography.h5,
+                fontWeight = FontWeight.Bold,
+                color = Color.Red,
+                modifier = modifier.padding(top = 4.dp)
+            )
+        }
+
+        Text(
+            text = acType,
+            style = MaterialTheme.typography.body1
+        )
+    }
+}
+@Composable
+fun AircraftItem(aircraft: Aircraft, modifier: Modifier = Modifier) {
+    var expanded by remember { mutableStateOf(false) }
+    Card(
+        elevation = 4.dp,
+        modifier = modifier.padding(4.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .animateContentSize(
+                    animationSpec = spring(
+                        dampingRatio = Spring.DampingRatioMediumBouncy,
+                        stiffness = Spring.StiffnessLow
+                    )
+                )
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(8.dp)
+            ) {
+                AircraftInfoItem(aircraft.acRusReg,aircraft.acType,aircraft.acForReg)
+                Spacer(Modifier.weight(1f))
+                AircraftItemButton(
+                    expanded = expanded,
+                ) { expanded = !expanded }
+            }
+            if (expanded) {
+                AircraftMoreInfo(aircraft.acSerialNum,aircraft.acEffNum)
+
+            }
+        }
+    }
+}
+
+@Composable
+fun AircraftMoreInfo(acSerNum: String,acEffNum: String, modifier: Modifier = Modifier) {
+    Column (
+        modifier = modifier
+            .background(color = Color.Yellow)
+            .padding(
+            start = 16.dp,
+            top = 8.dp,
+            bottom = 16.dp,
+            end = 16.dp),
+
+    ){
+        Row {
+            Text(
+                text = stringResource(R.string.serNumber),
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.h5
+            )
+            Text(
+                text = acSerNum,
+                style = MaterialTheme.typography.h5
+            )
+        }
+        Row {
+            Text(
+                text = stringResource(R.string.effNumber),
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.h5
+            )
+            Text(
+                text = acEffNum,
+                style = MaterialTheme.typography.h5
+            )
+        }
+
+
     }
 }
