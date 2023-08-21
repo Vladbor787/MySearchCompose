@@ -22,11 +22,11 @@ class MainViewModel:ViewModel() {
             if(text.isBlank()){
                 persons
             } else {
-               // delay(200L)
-                    persons.filter {
-                        it.doesMatchSearchQuery(text)
-                    }
+                // delay(200L)
+                persons.filter {
+                    it.doesMatchSearchQuery(text)
                 }
+            }
         }
         .onEach { _isSearching.update { false } }
         .stateIn(
@@ -51,7 +51,7 @@ data class Aircraft(
         )
 
         return matchingCombinations.any {
-           it.contains(query,ignoreCase = true)
+            it.contains(query,ignoreCase = true)
         }
     }
 }
@@ -326,4 +326,4 @@ private  val allAircrafts = listOf(
     Aircraft(RusRegistr = "RA-73782",lastName = "VQ-BQX	(A330) AFL S/N ☆01232☆ AIPC EFF=>"),
     Aircraft(RusRegistr = "RA-73783",lastName = "VQ-BQY	(A330) AFL S/N ☆01247☆ AIPC EFF=>"),
     Aircraft(RusRegistr = "RA-73784",lastName = "VQ-BQZ	(A330) AFL S/N ☆01270☆ AIPC EFF=>"),
-    )
+)
