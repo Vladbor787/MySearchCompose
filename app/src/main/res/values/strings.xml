@@ -2,5 +2,6 @@
     <string name="app_name">AircraftSearch</string>
     <string name="serNumber">S/N: </string>
     <string name="effNumber">EFF: </string>
+    <string name="mfcDate">MFD: </string>
 
 </resources>

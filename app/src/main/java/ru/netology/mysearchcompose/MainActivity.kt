@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.Icon
@@ -31,14 +32,19 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -49,6 +55,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import ru.netology.mysearchcompose.ui.theme.MySearchComposeTheme
 
 class MainActivity : ComponentActivity() {
+    @OptIn(ExperimentalComposeUiApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -57,9 +64,13 @@ class MainActivity : ComponentActivity() {
                 val searchText by viewModel.searchText.collectAsState()
                 val aircrafts by viewModel.aircrafts.collectAsState()
                 val isSearching by viewModel.isSearching.collectAsState()
-                Column(
+                val keyboardController = LocalSoftwareKeyboardController.current
+                val grouped = aircrafts.sortedBy { it.acRusReg }
+                val focusRequester = remember { FocusRequester() }
 
+                Column(
                     modifier = Modifier
+                        .background(MaterialTheme.colors.background)
                         .fillMaxSize()
                 ) {
 
@@ -68,15 +79,24 @@ class MainActivity : ComponentActivity() {
                         onValueChange = viewModel::onSearchTextChange,
                         label = { Text("Начни поиск") },
                         maxLines = 1,
+                        keyboardActions = KeyboardActions(onDone = {
+                            keyboardController?.hide()
+                        }),
                         singleLine = true,
                         leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                        textStyle = TextStyle(color = Color.Blue,
+                        textStyle = TextStyle(
+                            color = MaterialTheme.colors.onBackground,
                             fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp),
+                            fontSize = 26.sp),
                         modifier = Modifier
                             .padding(horizontal = 8.dp)
+                            .focusRequester(focusRequester)
                             .fillMaxWidth(),
+
                         placeholder = { Text(text = "Search") })
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
                     if (isSearching) {
                         Box(modifier = Modifier.fillMaxSize()) {
                             CircularProgressIndicator(
@@ -86,14 +106,28 @@ class MainActivity : ComponentActivity() {
                     } else {
                         LazyColumn(
                             modifier = Modifier
-
+                                .background(MaterialTheme.colors.background)
                                 .fillMaxWidth(),
                             contentPadding = PaddingValues(16.dp),
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            items(aircrafts) {
-                                AircraftItem(aircraft = it)
-                            }
+//                             grouped.forEach { (header, items) ->
+//                                 stickyHeader {
+//                                     Surface {
+//                                         Text(
+//                                             text = "HEADER $header",
+//                                             style = MaterialTheme.typography.h4,
+//                                             fontWeight = FontWeight.Bold,
+//
+//                                             )
+//                                     }
+//
+//                                 }
+                                 items(grouped) {
+                                     AircraftItem(aircraft = it)
+                                 }
+
+
                         }
                     }
                 }
@@ -101,6 +135,7 @@ class MainActivity : ComponentActivity() {
         }
     }
 }
+
 @Composable
 private fun AircraftItemButton(
     expanded: Boolean,
@@ -169,7 +204,7 @@ fun AircraftItem(aircraft: Aircraft, modifier: Modifier = Modifier) {
                 ) { expanded = !expanded }
             }
             if (expanded) {
-                AircraftMoreInfo(aircraft.acSerialNum,aircraft.acEffNum)
+                AircraftMoreInfo(aircraft.acSerialNum,aircraft.acEffNum,aircraft.acMfd)
 
             }
         }
@@ -177,15 +212,16 @@ fun AircraftItem(aircraft: Aircraft, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun AircraftMoreInfo(acSerNum: String,acEffNum: String, modifier: Modifier = Modifier) {
+fun AircraftMoreInfo(acSerNum: String,acEffNum: String,mfcDate:String, modifier: Modifier = Modifier) {
     Column (
         modifier = modifier
-            .background(color = Color.Yellow)
+            .background(MaterialTheme.colors.background)
             .padding(
-            start = 16.dp,
-            top = 8.dp,
-            bottom = 16.dp,
-            end = 16.dp),
+                start = 8.dp,
+                top = 8.dp,
+                bottom = 8.dp,
+                end = 8.dp
+            ),
 
     ){
         Row {
@@ -193,11 +229,11 @@ fun AircraftMoreInfo(acSerNum: String,acEffNum: String, modifier: Modifier = Mod
                 text = stringResource(R.string.serNumber),
                 fontStyle = FontStyle.Italic,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.h5
+                style = MaterialTheme.typography.h6
             )
             Text(
                 text = acSerNum,
-                style = MaterialTheme.typography.h5
+                style = MaterialTheme.typography.h6
             )
         }
         Row {
@@ -205,11 +241,23 @@ fun AircraftMoreInfo(acSerNum: String,acEffNum: String, modifier: Modifier = Mod
                 text = stringResource(R.string.effNumber),
                 fontStyle = FontStyle.Italic,
                 fontWeight = FontWeight.Bold,
-                style = MaterialTheme.typography.h5
+                style = MaterialTheme.typography.h6
             )
             Text(
                 text = acEffNum,
-                style = MaterialTheme.typography.h5
+                style = MaterialTheme.typography.h6
+            )
+        }
+        Row {
+            Text(
+                text = stringResource(R.string.mfcDate),
+                fontStyle = FontStyle.Italic,
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.h6
+            )
+            Text(
+                text = mfcDate,
+                style = MaterialTheme.typography.h6
             )
         }
 
